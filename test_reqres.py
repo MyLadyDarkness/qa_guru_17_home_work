@@ -1,26 +1,47 @@
 import json
+import logging
 
+import allure
+import curlify
 import requests
+from allure_commons._allure import step
+from allure_commons.types import AttachmentType
 from jsonschema import validate
-
+from utils import post_reqres
 from schemas import post_users
+from utils import load_schema
 
-url = "https://reqres.in/api/users"
 
-payload = {"name": "morpheus", "job": "leader"}
+BASE_URL = "https://reqres.in"
 
-response = requests.request("POST", url, data=payload)
 
-print(response.text)
+
 
 
 def test_schema_validate_from_file():
-    response = requests.post("https://reqres.in/api/users", data={"name": "morpheus", "job": "master"})
+    response = requests.post(BASE_URL + "/api/users", data={"name": "morpheus", "job": "master"})
     body = response.json()
 
     assert response.status_code == 201
     with open("post_users.json") as file:
         validate(body, schema=json.loads(file.read()))
+
+
+def test_schema_validate_from_file_with_post_reqres():
+    response = post_reqres("/api/users", data={"name": "morpheus", "job": "master"})
+    body = response.json()
+
+    assert response.status_code == 201
+    with open("post_users.json") as file:
+        validate(body, schema=json.loads(file.read()))
+
+
+def test_schema_validate_from_file_with_load_file_function():
+    response = requests.post("https://reqres.in/api/users", data={"name": "morpheus", "job": "master"})
+    body = response.json()
+
+    assert response.status_code == 201
+    validate(body, schema=load_schema("post_users.json"))
 
 
 def test_schema_validate_from_variable():
